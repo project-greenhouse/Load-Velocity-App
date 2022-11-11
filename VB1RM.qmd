@@ -1,0 +1,442 @@
+---
+title: "Velocity Based Estimated 1 rep Max"
+author: "Lauren Green"
+format: 
+  html:
+    self-contained: true
+    code-tools: true
+    smooth-scroll: true
+    toc: true
+    toc-depth: 2
+    toc-location: left
+    toc-title: "On this page"
+    theme: lux
+execute: 
+  warning: false
+knitr: 
+  opts_chunk: 
+    warning: false
+    message: false
+editor: visual
+bibliography: references.bib
+---
+
+```{r}
+#| echo: false
+
+library(tidyr)
+library(ggplot2)
+library(stringr)
+library(plotly)
+library(dplyr)
+library(readr)
+library(formattable)
+library(ggthemes)
+library(DescTools)
+library(googlesheets4)
+
+## Read all data 
+gs4_deauth()
+sheet_id <- "https://docs.google.com/spreadsheets/d/1hzXw4B6Tm1ro6qyaBMTlLdJ2YhdBHAI2dvxXIQQe-0Q/"
+appData <- read_sheet(sheet_id)
+VmaxData <-  appData %>%
+  transmute("Date" = Date,
+            "User" = User,
+            "Exercise" = Exercise,
+            "Set" = Set,
+            "Load" = Load,
+            "Rep" = Rep,
+            "mVelo" = aVelocity,
+            "pVelo" = pVelocity,
+            "mPow" = aPower,
+            "pPow" = pPower)
+
+## Clean data
+vmaxSquat <- VmaxData %>% 
+  filter(Exercise == "Back Squat", 
+         User == "First Player")
+
+vmaxBench <- VmaxData %>% 
+  filter(Exercise == "Bench Press", 
+         User == "Second Athlete",
+         Date == "10-20-2022")
+```
+
+![](images/GSP%20Banner%20trans.png){fig-align="center"}
+
+# Estimating 1 Rep Max
+
+## What is 1RM?
+
+```{r}
+#| echo: false
+
+library(vembedr)
+
+#embed_url("https://www.youtube.com/watch?v=QlYgnf_qCNo")
+```
+
+## Methods for finding 1RM
+
+## Velocity Based vs Traditional Methods
+
+## Velocity Based Methods
+
+The standard test used to determine the individual L-V relationship consists of recording MV against multiple submaximal loads (≈5 loads) and, subsequently, modeling the L-V relationship through a linear regression to estimate the 1RM as the load associated with the MV of the 1RM (V1RM)
+
+Because of the low reliability of the individual V1RM (6,29,73), and the trivial differences between the between- and within-subject variability for the V1RM (70), the use of a general V1RM for all subjects could be recommended to simplify the testing procedure.
+
+we recommend the use of MV to estimate the 1RM because of its greater reliability (when compared with MPV) when lifting light relative loads
+
+Considerations for coaches using 1RM estimates from velocity
+
+the relationship between the MV recorded during a single repetition and the %1RM may be influenced by the type of exercise (e.g., squat versus leg press (13,38,75), execution technique (e.g., concentric-only vs. eccentric-concentric (28,65), sex (higher values for men at lower %1RM) (3,84), and measurement device
+
+the MV-%1RM relationship, especially at light relative loads, is subject-specific
+
+overestimation of the data fit because of the presence of autocorrelation because authors included more than one observation from the same participant to calculate the general L-V relationships
+
+-   Slope intercept formula
+
+$y = mx + b$ -----\> $x = \frac{y-b}{m}$
+
+-   Minimum Velocity Threshold (MVT)
+
+-   Force-Velocity Balance (slope)
+
+-   Curve Score / Total Power (area under curve)
+
+-   Lzero - Velocity at zero load
+
+-   Vzero - Load at zero velocity
+
+::: callout-caution
+## Overestimation of the data fit because of the presence of autocorrelation because authors included more than one observation from the same participant to calculate the general L-V relationships
+:::
+
+------------------------------------------------------------------------
+
+# Progressive L-V Relationship
+
+## Instructions
+
+The standard test used to determine the individual L-V relationship consists of recording MV against multiple submaximal loads (≈5 loads) and, subsequently, modeling the L-V relationship through a linear regression to estimate the 1RM as the load associated with the MV of the 1RM (V1RM)
+
+Because of the low reliability of the individual V1RM (6,29,73), and the trivial differences between the between- and within-subject variability for the V1RM (70), the use of a general V1RM for all subjects could be recommended to simplify the testing procedure.
+
+we recommend the use of MV to estimate the 1RM because of its greater reliability (when compared with MPV) when lifting light relative loads
+
+Considerations for coaches using 1RM estimates from velocity
+
+the relationship between the MV recorded during a single repetition and the %1RM may be influenced by the type of exercise (e.g., squat versus leg press (13,38,75), execution technique (e.g., concentric-only vs. eccentric-concentric (28,65), sex (higher values for men at lower %1RM) (3,84), and measurement device
+
+the MV-%1RM relationship, especially at light relative loads, is subject-specific
+
+overestimation of the data fit because of the presence of autocorrelation because authors included more than one observation from the same participant to calculate the general L-V relationships
+
+## Back Squat Example
+
+##### Summary of Barbell Back Squat Session
+
+::: column-body-outset
+```{r}
+#| echo: false
+squatSumm <- vmaxSquat %>%
+  group_by(Load) %>%
+  summarise("Reps" = max(Rep),
+            "Avg. Mean Velo (m/s)" = round(mean(mVelo),2),
+            "SD Mean Velo (m/s)" = round(sd(mVelo),2))
+
+# Print table of summarized data
+formattable(squatSumm, align = "c")
+```
+
+```{r}
+#| echo: false
+#| label: plot-bbSquat-MVxLoad-all
+#| fig-cap: "All Reps from Back Squat L-V Barbell Back Squat Session"
+
+plotSquatAll <- ggplot(vmaxSquat, aes(x = Load, y = mVelo)) +
+  geom_point(shape = "circle", size = 2L, colour = "#228B22") +
+  labs(title = "Mean Velocity by Load",
+       subtitle = "All Reps from Back Squat Session",
+       x = "Load (kg)",
+       y = "Mean Velocity (m/s)") +
+  theme_gdocs()
+
+ggplotly(plotSquatAll)
+```
+:::
+
+#### **(I) Mean Velocity vs Load**
+
+##### Best Rep per Load by Mean Velocity
+
+```{r}
+#| echo: false
+
+# Select load and max MV for LV profile
+profSquat <- vmaxSquat %>%
+  group_by(Load) %>%
+  summarise("MV" = max(mVelo))
+
+## Fit Linear Model
+# Minimum Velocity Threshold
+mvtSquat <- 0.3
+
+
+# Fit linear model
+lvfit_squat <- lm(data = profSquat, MV ~ Load)
+
+
+# formula
+lvFormula_squat <- paste0("MV = ", round(lvfit_squat$coefficients[1],5), " + ", round(lvfit_squat$coefficients[2],5), " * Load")
+
+
+# R-squared value
+rSquared_squat <- paste0("R^2 = ", round(summary(lvfit_squat)$r.squared,5))
+```
+
+This chart shows the best rep of each set (load) and it's mean velocity (m/s). The same data is shown in tabular form on the side margin
+
+::: {#fig-Squat-Profile layout-nrow="1"}
+```{r}
+#| echo: false
+
+# Print table of profile data
+formattable(profSquat, align = "c")
+
+# Plot LV data with lm
+plotSquatLV <- ggplot(profSquat, aes(x = Load, y = MV,)) +
+  geom_point(shape = "circle", size = 4L, colour = "#228B22") +
+  geom_smooth(method = lm) +
+  geom_text(aes(label = lvFormula_squat), x = 120, y = 1) +
+  geom_text(aes(label = rSquared_squat), x = 120, y = 0.9) +
+  labs(title = "Mean Velocity by Load",
+       subtitle = "Barbell Back Squat - High Bar",
+       x = "Load (kg)",
+       y = "Mean Velocity (m/s)") +
+  theme_gdocs()
+
+ggplotly(plotSquatLV)
+
+```
+:::
+
+#### **(II) Linear Regression**
+
+x =Load \| y = MV
+
+$method (lm) = MV \sim Load$
+
+$MV = 1.152819 + (-0.0043569 * Load)$
+
+$R^2 = 0.98586$
+
+Y-Intercept (b) = 1.152819
+
+Slope (m) = -0.0043569
+
+#### **(III) Estimate 1 Rep Max**
+
+Minimum Velocity Threshold (y) = 0.30
+
+$y = mx + b$ -----\> $x = \frac{y-b}{m}$
+
+$$
+e1RM = \frac{0.3 - 1.15282}{-0.00435696}
+$$
+
+e1RM = 196kg
+
+```{r}
+#| echo: false
+
+# Solve for e1RM Squat Example
+# y-intercept
+yIntSquat <- as.double(lvfit_squat$coefficients[1])
+
+# slope
+lvSlopeSquat <- as.double(lvfit_squat$coefficients[2])
+
+# estimate 1RM
+e1rM_squat <- round((mvtSquat - yIntSquat)/lvSlopeSquat,0)
+
+# Unpack lm curve for line points
+lvBuild_squat <- ggplot_build(plotSquatLV)
+
+# lm curve x and y data frame
+lmdata_squat <- as.data.frame(lvBuild_squat$data[2]) %>% select (x,y)
+
+# lm end point
+squatXend <- max(lmdata_squat$x)
+squatYend <- min(lmdata_squat$y)
+
+# slope score 
+slopeScore_squat <- round(AUC(x = lmdata_squat$x, y = lmdata_squat$y),2)
+```
+
+\+
+
+```{r}
+#| echo: false
+
+plote1rm_squat <- ggplot(profSquat, aes(x = Load, y = MV)) +
+  # Rep points
+  geom_point(shape = "circle", 
+             size = 2L, 
+             colour = "#151819") +
+  # linear trend line
+  geom_smooth(method = lm) +
+  # Minimum Velocity Threshold
+  geom_hline(yintercept = mvtSquat, 
+             colour = "red",
+             linetype = "longdash", 
+             size = 1) +
+  # MVT text
+  geom_text(aes(x = 20, 
+                 y = mvtSquat, 
+                 label = paste0("MVT: ", mvtSquat)),
+            colour = "red",
+            nudge_y = 0.05,
+            nudge_x = 10) +
+  # e1RM future trend line
+  geom_segment(x = squatXend, 
+               y = squatYend,
+               xend = e1rM_squat,
+               yend = mvtSquat,
+               linetype = "dotdash",
+               colour = "#228B22",
+               size = 1) +
+  # e1RM Point
+  geom_point(aes(x = e1rM_squat, y = mvtSquat),
+             shape = "circle", 
+             size = 3L, 
+             colour = "#228B22") +
+  # e1RM text label
+  geom_text(aes(x = e1rM_squat, 
+                 y = mvtSquat, 
+                 label = paste0("e1RM: ",e1rM_squat)),
+            size = 5,
+            colour = "#228B22",
+            nudge_y = -0.1,
+            nudge_x = -10) +
+  # LV formula text
+  geom_text(aes(label = lvFormula_squat), 
+            x = 120, 
+            y = 1.25) +
+  # R-squared value text
+  geom_text(aes(label = rSquared_squat), 
+            x = 120, 
+            y = 1.2) +
+  # Slope Score Value text
+  geom_text(aes(label = paste0("Slope Scores: ", slopeScore_squat), 
+                x = 120, 
+                y = 1.15)) +
+  # Plot labels
+  labs(title = "Velocity Estimated 1 Rep Max",
+       subtitle = "Barbell Back Squat - High Bar",
+       x = "Load (kg)",
+       y = "Mean Velocity (m/s)") +
+  # Plot theme
+  theme_gdocs() +
+  # X-axis limits
+  xlim(20,200) +
+  # Y-axos limits
+  ylim(0.0,1.5)
+
+ggplotly(plote1rm_squat)
+```
+
+# 2-Point Method
+
+## Instructions
+
+## Bench Press Example
+
+Here is the table for the bench press example for 2 point method
+
+```{r}
+#| echo: false
+
+plotBenchAll <- ggplot(vmaxBench, aes(x = Load, y = mVelo)) +
+  geom_point(shape = "circle", size = 2L, colour = "#228B22") +
+  labs(title = "Mean Velocity by Load",
+       subtitle = "Barbell Bench Press",
+       y = "Mean Velocity (m/s)",
+       x = "Load (kg)") +
+  theme_gdocs()
+
+ggplotly(plotBenchAll)
+
+```
+
+\+
+
+::: column-body-outset
+```{r}
+#| echo: false
+dfBenchSummary <- vmaxBench %>%
+  group_by(Load) %>%
+  summarise("Reps" = max(Rep),
+            "Avg Mean Velocity (m/s)" = round(mean(mVelo), 2),
+            "Max Mean Velocity (m/s)" = round(max(mVelo), 2),
+            "SD Mean Velocity (m/s)" = round(sd(mVelo),2))
+
+
+# Print table of summarized data
+formattable(dfBenchSummary, align = "c")
+```
+:::
+
+\+
+
+#### **(I) Mean Velocity vs Load**
+
+```{r}
+#| echo: false
+dfBench2pt <- vmaxBench %>%
+  group_by(Load) %>%
+  summarise("MV" = max(mVelo)) %>%
+  mutate("Method" = ifelse(Load == 60, "2pt", ifelse(Load == 110, "2pt", "Full")))
+
+ formattable(dfBench2pt, align = "c") 
+```
+
+![Load Velocity Data Table - Barbell Back Squat](images/Squat%20Profile%20Datatable.png){fig-align="left" width="400"}
+
+\+
+
+```{r}
+
+```
+
+#### **(II) Linear Regression**
+
+x =Load \| y = MV
+
+$method (lm) = MV \sim Load$
+
+$MV = 1.59789 + (-0.00915 * Load)$
+
+$R^2 = 0.98586$
+
+Y-Intercept (b) = 1.597887
+
+Slope (m) = -0.009146907
+
+#### **(III) Estimate 1 Rep Max**
+
+Minimum Velocity Threshold (y) = 0.17
+
+$y = mx + b$ -----\> $x = \frac{y-b}{m}$
+
+$$
+e1RM = \frac{0.17 - 1.597887}{-0.009146907}
+$$
+
+e1RM = 156kg
+
+![](images/LV_Profile_e1RM_FullLV.png){fig-align="left" width="900"}
+
+![](images/LV_Profile_e1RM_2point.png){fig-align="left" width="900"}

@@ -1,0 +1,14 @@
+name: LoadVelocityApp
+title: LoadVelocityApp
+username:
+account: greenhouse-sp
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 7567451
+bundleId: 6500771
+url: https://greenhouse-sp.shinyapps.io/LoadVelocityApp/
+when: 1668128745.54255
+lastSyncTime: 1668128745.54258
+asMultiple: FALSE
+asStatic: FALSE
+ignoredFiles: .RData|references.bib|VB1RM.html|VB1RM.qmd|www/banner.png|www/logo.png|images
