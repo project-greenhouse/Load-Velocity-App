@@ -1,5 +1,7 @@
 library(shiny)
+library(shinyWidgets)
 library(shinydashboard)
+library(shinydashboardPlus)
 library(tidyr)
 library(stringr)
 library(DT)
@@ -16,13 +18,30 @@ gs4_deauth()
 sheet_id <- "https://docs.google.com/spreadsheets/d/1hzXw4B6Tm1ro6qyaBMTlLdJ2YhdBHAI2dvxXIQQe-0Q/"
 appData <- read_sheet(sheet_id)
 
+#----------#
+
 # UI -----
 ui <- dashboardPage(
   skin = "black",
   ## Header -----
   dashboardHeader(
-    title = tags$a(href='https://github.com/project-greenhouse/Load-Velocity-App',
-                           tags$img(src='banner_wht.png', height='55',width='150'))
+    ### Title -----
+    title = "Load-Velocity App", titleWidth = 250,
+    ### User Icon -----
+    userOutput("user"),
+    ### Github Icon Link -----
+    tags$li(
+      class="dropdown", 
+      tags$a(
+        # link reference
+        href="https://github.com/project-greenhouse/Load-Velocity-App",
+        # icon
+        icon("github"), 
+        # display text
+        "Source Code", 
+        target="_blank"
+      )
+    )
   ),
   ## Sidebar -----
   dashboardSidebar(
@@ -327,7 +346,55 @@ ui <- dashboardPage(
 # Server -----
 server <- function(input, output, session) {
   
-  ##  Sidebar -----
+  ## Header -----
+  ### User Output -----
+  output$user <- renderUser({
+    dashboardUser(
+      name = "Greenhouse Sports Performance", 
+      image = "GSPlogo.png", 
+      title = "Lauren Green",
+      subtitle = "Author", 
+      footer = p("Together We Grow", class = "text-center"),
+      fluidRow(
+        # Website
+        dashboardUserItem(
+          width = 3,
+          socialButton(
+            href = "https://www.greenhousesp.com",
+            icon = icon("home")
+          )
+        ),
+        # Github
+        dashboardUserItem(
+          width = 3,
+          socialButton(
+            href = "https://github.com/project-greenhouse",
+            icon = icon("square-github")
+          )
+        ),
+        # Instagram
+        dashboardUserItem(
+          width = 3,
+          socialButton(
+            href = "https://www.instagram.com/greenhouse_sp/",
+            icon = icon("square-instagram")
+          )
+        ),
+        #YouTube
+        dashboardUserItem(
+          width = 3,
+          socialButton(
+            href = "https://www.youtube.com/@greenhouseperformance",
+            icon = icon("square-youtube")
+          )
+        )
+      )
+    )
+  })
+  
+  #----------#
+  
+  ## Sidebar -----
   ### Template Download -----
   output$dwnldTemplate <- downloadHandler(
     filename = function() {
@@ -350,7 +417,6 @@ server <- function(input, output, session) {
   
   #----------#
   
-  #----------#
   ## History -----
   ###  Athlete Observe Function -----
   observe({
