@@ -858,7 +858,8 @@ server <- function(input, output, session) {
         "Load" = Load,
         "Avg. Velocity (m/s)" = MV,
         "Avg. Power (w)" = MP
-      )
+      ) %>%
+      arrange(Load)
     
     datatable(
       df, 
@@ -899,7 +900,8 @@ server <- function(input, output, session) {
         "Load" = Load,
         "Avg. Velocity (m/s)" = MV,
         "Avg. Power (w)" = MP
-      )
+      ) %>%
+      arrange(Load)
         
     datatable(
       df, 
